@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Hornet Buzz Tracking</title>
+    <link rel="stylesheet" href="popup.css">
+</head>
+
+<body class="dark-mode">
+    <div class="container">
+        <header>
+            <h1>Hornet Buzz</h1>
+            <button id="resetViewBtn" class="secondary-btn">Takibi Sıfırla</button>
+        </header>
+
+        <section class="stats-bar">
+            <div class="stat-card">
+                <span class="stat-label">Toplam Hedef</span>
+                <span id="totalGoal" class="stat-value">0</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">Son Gelen</span>
+                <span id="lastDelta" class="stat-value">0</span>
+            </div>
+        </section>
+
+        <section class="history-section">
+            <h2>Hediye Geçmişi</h2>
+            <ul id="historyList">
+                <li class="empty-msg">Henüz hediye yok...</li>
+            </ul>
+        </section>
+
+        <section class="settings-section">
+            <h2>Chat Okuyucu Ayarları</h2>
+            <div class="setting-item">
+                <label>
+                    <input type="checkbox" id="readChatToggle" checked> Oku
+                </label>
+            </div>
+            <div class="setting-item">
+                <span>Mod:</span>
+                <label><input type="radio" name="filterMode" value="blacklist" checked> Engellenenler (Kara Liste)</label>
+                <label><input type="radio" name="filterMode" value="whitelist"> İzin Verilenler (Beyaz Liste)</label>
+            </div>
+            <div class="user-list-wrapper">
+                <div class="add-user-row">
+                    <input type="text" id="newUserInput" placeholder="Kullanıcı Adı">
+                    <button id="addUserBtn" class="secondary-btn">Ekle</button>
+                </div>
+                <ul id="filterList"></ul>
+            </div>
+        </section>
+
+        <footer>
+            <button id="refreshBtn" class="primary-btn">Force Refresh Observer</button>
+            <div id="status">Status: Monitoring...</div>
+        </footer>
+    </div>
+    <script src="popup.js"></script>
+</body>
+
+</html>

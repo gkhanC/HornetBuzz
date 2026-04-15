@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Mock Hornet Live</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            padding: 50px;
+            background: #f0f0f0;
+        }
+
+        #chat {
+            border: 1px solid #ccc;
+            height: 300px;
+            overflow-y: scroll;
+            background: white;
+            padding: 10px;
+        }
+
+        .gift {
+            color: gold;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Hornet Live Mock</h1>
+    <div id="chat">
+        <div>Initial message</div>
+    </div>
+    <br>
+    <button id="addGift">Simulate Gift</button>
+    <button id="addNormal">Simulate Chat</button>
+
+    <script src="discovery-script.js"></script>
+    <script>
+        document.getElementById('addGift').onclick = () => {
+            const div = document.createElement('div');
+            div.className = 'chat-row';
+            div.innerHTML = `
+                <span class="tmg-live-video-user-gifter">GifterHero</span>
+                <span class="tmg-live-video-gift-message">sent a Rose!</span>
+            `;
+            document.getElementById('chat').appendChild(div);
+        };
+
+        document.getElementById('addNormal').onclick = () => {
+            const div = document.createElement('div');
+            div.innerText = 'Hello world';
+            document.getElementById('chat').appendChild(div);
+        };
+    </script>
+</body>
+
+</html>
