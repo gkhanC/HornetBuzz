@@ -40,9 +40,18 @@
                 </label>
             </div>
             <div class="setting-item">
-                <span>Mod:</span>
-                <label><input type="radio" name="filterMode" value="blacklist" checked> Engellenenler (Kara Liste)</label>
-                <label><input type="radio" name="filterMode" value="whitelist"> İzin Verilenler (Beyaz Liste)</label>
+                <span>Filtre Modu:</span>
+                <label><input type="radio" name="filterMode" value="blacklist" checked> Engellenenler</label>
+                <label><input type="radio" name="filterMode" value="whitelist"> İzin Verilenler</label>
+            </div>
+            <div class="setting-item">
+                <span>Okuma Modu:</span>
+                <label title="Mesaj okunurken yenisi gelirse okunmaz">
+                    <input type="radio" name="readMode" value="drop" checked> Görmezden Gel
+                </label>
+                <label title="Tüm mesajlar sıraya alınır">
+                    <input type="radio" name="readMode" value="queue"> Kuyruğa Al
+                </label>
             </div>
             <div class="user-list-wrapper">
                 <div class="add-user-row">

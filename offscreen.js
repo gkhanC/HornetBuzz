@@ -2,6 +2,7 @@ let currentAudio = null;
 let currentPlayingValue = 0;
 let ttsAudio = null;
 let isTtsPlaying = false;
+let ttsQueue = [];
 
 function sendLog(msg) {
     console.log(msg);
@@ -14,14 +15,30 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         handlePlayAudio(message.file, message.value || 0);
         sendResponse({ success: true });
     } else if (message.type === 'SPEAK_TEXT') {
-        handleSpeakText(message.text);
+        handleIncomingChat(message.text, message.readMode || 'drop');
         sendResponse({ success: true });
     }
     return true;
 });
 
+function handleIncomingChat(text, mode) {
+    if (!text) return;
+
+    if (mode === 'queue') {
+        ttsQueue.push(text);
+        processQueue();
+    } else {
+        // Drop mode: Only play if silent
+        if (!isTtsPlaying && !currentAudio) {
+            ttsQueue.push(text);
+            processQueue();
+        } else {
+            sendLog(`Ignored (drop mode): ${text}`);
+        }
+    }
+}
+
 function handlePlayAudio(file, value) {
-    // Gift takes absolute priority over TTS
     if (isTtsPlaying && ttsAudio) {
         try { 
             ttsAudio.pause(); 
@@ -32,7 +49,6 @@ function handlePlayAudio(file, value) {
         sendLog('Interrupted TTS for incoming Gift sound!');
     }
     
-    // Higher value gift can interrupt lower value gift
     if (currentAudio) {
         if (value > currentPlayingValue) {
             try { currentAudio.pause(); currentAudio.currentTime = 0; } catch (e) { }
@@ -54,29 +70,27 @@ function playAudio(file, value) {
         sendLog(`Gift Audio play error: ${e.message}`);
         currentAudio = null;
         currentPlayingValue = 0;
+        processQueue(); // Resume chat if any
     });
     currentAudio.onended = () => {
         currentAudio = null;
         currentPlayingValue = 0;
+        processQueue(); // Resume chat if any
     };
 }
 
-function handleSpeakText(text) {
-    if (!text) return;
-    
-    // NO QUEUING: If anything is playing, drop the message.
-    if (currentAudio || isTtsPlaying) {
-        sendLog(`Ignored chat text "${text}" because another sound/speech is already playing.`);
-        return;
-    }
-    
+function processQueue() {
+    if (isTtsPlaying || currentAudio || ttsQueue.length === 0) return;
+
+    const text = ttsQueue.shift();
     isTtsPlaying = true;
-    sendLog(`Starting Edge TTS Generation for: ${text}`);
-    
+    sendLog(`Processing TTS: ${text}`);
+
     chrome.runtime.sendMessage({ type: 'FETCH_TTS', text: text }, (response) => {
-        // Double check after fetch starts/finishes if a gift arrived in between
+        // Catch interrupt during fetch
         if (currentAudio) {
             isTtsPlaying = false;
+            ttsQueue.unshift(text); // Put it back to retry after gift
             return;
         }
 
@@ -86,6 +100,7 @@ function handleSpeakText(text) {
             ttsAudio.onended = () => {
                 isTtsPlaying = false;
                 ttsAudio = null;
+                processQueue();
             };
             ttsAudio.onerror = () => fallbackSpeech(text);
             ttsAudio.play().catch(() => fallbackSpeech(text));
@@ -99,6 +114,7 @@ function fallbackSpeech(text) {
     if (currentAudio) {
         isTtsPlaying = false;
         ttsAudio = null;
+        ttsQueue.unshift(text);
         return;
     }
     
@@ -109,13 +125,16 @@ function fallbackSpeech(text) {
     ttsAudio.onended = () => {
         isTtsPlaying = false;
         ttsAudio = null;
+        processQueue();
     };
     ttsAudio.onerror = () => {
         isTtsPlaying = false;
         ttsAudio = null;
+        processQueue();
     };
     ttsAudio.play().catch(() => {
         isTtsPlaying = false;
         ttsAudio = null;
+        processQueue();
     });
 }

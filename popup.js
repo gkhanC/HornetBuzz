@@ -64,6 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Chat Settings Logic
     const readChatToggle = document.getElementById('readChatToggle');
     const filterModeRadios = document.getElementsByName('filterMode');
+    const readModeRadios = document.getElementsByName('readMode');
     const newUserInput = document.getElementById('newUserInput');
     const addUserBtn = document.getElementById('addUserBtn');
     const filterListUl = document.getElementById('filterList');
@@ -71,6 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let chatSettings = {
         enabled: true,
         mode: 'blacklist',
+        readMode: 'drop',
         users: []
     };
 
@@ -100,9 +102,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     chrome.storage.local.get(['chatSettings'], (res) => {
         if (res.chatSettings) {
-            chatSettings = res.chatSettings;
+            chatSettings = { ...chatSettings, ...res.chatSettings };
             readChatToggle.checked = chatSettings.enabled;
             Array.from(filterModeRadios).forEach(r => r.checked = (r.value === chatSettings.mode));
+            Array.from(readModeRadios).forEach(r => r.checked = (r.value === chatSettings.readMode));
             renderFilterList();
         }
     });
@@ -115,6 +118,13 @@ document.addEventListener('DOMContentLoaded', () => {
     Array.from(filterModeRadios).forEach(r => {
         r.onchange = (e) => {
             chatSettings.mode = e.target.value;
+            saveSettings();
+        };
+    });
+
+    Array.from(readModeRadios).forEach(r => {
+        r.onchange = (e) => {
+            chatSettings.readMode = e.target.value;
             saveSettings();
         };
     });

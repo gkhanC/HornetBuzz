@@ -116,14 +116,14 @@ function processChat(event) {
         if (checkProfanity(text)) return;
 
         // Custom format requested by user
-        triggerSpeech(`${sender} Diyor ki ${text}`);
+        triggerSpeech(`${sender} Diyor ki ${text}`, settings.readMode || 'drop');
     });
 }
 
-async function triggerSpeech(text) {
+async function triggerSpeech(text, readMode = 'drop') {
     if (!text) return;
     await ensureOffscreen();
-    chrome.runtime.sendMessage({ type: 'SPEAK_TEXT', text: text, target: 'offscreen' }).catch(() => { });
+    chrome.runtime.sendMessage({ type: 'SPEAK_TEXT', text: text, readMode: readMode, target: 'offscreen' }).catch(() => { });
 }
 
 function generateEdgeTts(text, voice = 'tr-TR-AhmetNeural') {
