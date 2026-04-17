@@ -23,24 +23,31 @@
 
             const check = () => {
                 let sender = null;
-                // TreeWalker approach to find the message node
+                const matches = [];
+                
+                // Sayfadaki tüm metin düğümlerini tara ve metne uyanları topla
                 const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
                 let node;
                 while ((node = walker.nextNode())) {
                     if (node.nodeValue.trim() === text.trim()) {
-                        let parent = node.parentNode;
-                        // Limit vertical search
-                        for (let i = 0; i < 7; i++) {
-                            if (!parent || !parent.querySelector) break;
-                            // Search for known Hornet name classes in the parent context of the message
-                            const nameNode = parent.querySelector('.title-cell-name-holder, .tmg-live-video-user-name, .nickname');
-                            if (nameNode && nameNode.innerText && nameNode.innerText.trim() !== text.trim()) {
-                                sender = nameNode.innerText.trim();
-                                break;
-                            }
-                            parent = parent.parentNode;
+                        matches.push(node);
+                    }
+                }
+
+                // Sadece EN SON eşleşmeyi (chat'in en altına yeni eklenen mesajı) alıyoruz
+                if (matches.length > 0) {
+                    let lastNode = matches[matches.length - 1];
+                    let parent = lastNode.parentNode;
+                    
+                    // Limit vertical search: Mesajın babasından yukarı çıkarak ismi bul
+                    for (let i = 0; i < 7; i++) {
+                        if (!parent || !parent.querySelector) break;
+                        const nameNode = parent.querySelector('.title-cell-name-holder, .tmg-live-video-user-name, .nickname');
+                        if (nameNode && nameNode.innerText && nameNode.innerText.trim() !== text.trim()) {
+                            sender = nameNode.innerText.trim();
+                            break;
                         }
-                        if (sender) break;
+                        parent = parent.parentNode;
                     }
                 }
 

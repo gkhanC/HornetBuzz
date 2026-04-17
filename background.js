@@ -85,6 +85,50 @@ async function triggerAudio(soundFile, value) {
     chrome.runtime.sendMessage({ type: 'PLAY_AUDIO', file: soundFile, value: value, target: 'offscreen' }).catch(() => { });
 }
 
+const TURKISH_VOWELS = 'aeıioöuüAEIİOÖUÜ';
+const TURKISH_LETTERS = 'abcçdefgğhıijklmnoöprsştuüvyzABCÇDEFGĞHIİJKLMNOÖPRSŞTUÜVYZ';
+
+function cleanSenderName(name) {
+    if (!name) return '';
+    // Sadece harf, rakam ve boşlukları koru, emojileri ve özel karakterleri sil
+    return name.replace(/[^a-zA-Z0-9çğıöşüÇĞİÖŞÜ ]/g, '').replace(/\s+/g, ' ').trim();
+}
+
+function isGibberish(word) {
+    // Sadece harflerden oluşan kısmını kontrol edelim
+    const alphaOnly = word.replace(/[^a-zA-ZçğıöşüÇĞİÖŞÜ]/g, '');
+    if (alphaOnly.length <= 3) return false;
+    
+    const firstThree = alphaOnly.substring(0, 3);
+    let vowelsCount = 0;
+    let consonantsCount = 0;
+    
+    for (let char of firstThree) {
+        if (TURKISH_VOWELS.includes(char)) {
+            vowelsCount++;
+        } else {
+            consonantsCount++;
+        }
+    }
+    
+    // İlk 3 harf tamamen sesli veya tamamen sessizse gibberish say
+    return (vowelsCount === 3 || consonantsCount === 3);
+}
+
+function cleanMessageText(text) {
+    if (!text) return '';
+    
+    // 1. Ardışık emojileri teke indir (Farklı emojiler yan yana gelse bile ilkini korur)
+    // Regex: Bir emoji ve peşinden gelen 1 veya daha fazla emoji
+    let cleaned = text.replace(/(\p{Emoji_Presentation})\p{Emoji_Presentation}+/gu, '$1');
+    
+    // 2. Kelimeleri ayır ve random (gibberish) olanları filtrele
+    let words = cleaned.split(/\s+/);
+    let filteredWords = words.filter(word => !isGibberish(word));
+    
+    return filteredWords.join(' ').trim();
+}
+
 const PROFANITY_LIST = ['annı', 'bacını', 'ailenı', 'aq', 'orusbu', 'orusbu çocuğu', 'cocugu'];
 
 function checkProfanity(text) {
@@ -97,12 +141,20 @@ function checkProfanity(text) {
 }
 
 function processChat(event) {
-    const sender = event.sender;
-    const text = event.text || '';
+    const rawSender = event.sender;
+    const rawText = event.text || '';
+    
+    const sender = cleanSenderName(rawSender);
+    const text = cleanMessageText(rawText);
     
     // Strict requirement: No nickname, no reading.
     if (!sender || sender === 'Biri') {
-        console.log('[Background] Skipping chat because sender name is unknown.');
+        console.log('[Background] Skipping chat because sender name is invalid or cleaned to empty.');
+        return;
+    }
+
+    if (!text) {
+        console.log('[Background] Skipping chat because text is empty after cleaning.');
         return;
     }
 
@@ -113,6 +165,8 @@ function processChat(event) {
         const isUserInList = settings.users.includes(sender);
         if (settings.mode === 'blacklist' && isUserInList) return;
         if (settings.mode === 'whitelist' && !isUserInList) return;
+        
+        // Küfür kontrolü temizlenmiş metin üzerinden yapılır
         if (checkProfanity(text)) return;
 
         // Custom format requested by user
