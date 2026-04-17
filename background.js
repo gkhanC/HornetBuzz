@@ -115,18 +115,32 @@ function isGibberish(word) {
     return (vowelsCount === 3 || consonantsCount === 3);
 }
 
+const ABBREVIATIONS = {
+    'hyr': 'hayır',
+    'evt': 'evet',
+    'naslsn': 'nasılsın',
+    'ap': 'a p',
+    'Ap': 'a p'
+};
+
 function cleanMessageText(text) {
     if (!text) return '';
     
-    // 1. Ardışık emojileri teke indir (Farklı emojiler yan yana gelse bile ilkini korur)
-    // Regex: Bir emoji ve peşinden gelen 1 veya daha fazla emoji
+    // 1. Ardışık emojileri teke indir
     let cleaned = text.replace(/(\p{Emoji_Presentation})\p{Emoji_Presentation}+/gu, '$1');
     
-    // 2. Kelimeleri ayır ve random (gibberish) olanları filtrele
+    // 2. Kelimeleri ayır, random (gibberish) olanları filtrele ve kısaltmaları düzelt
     let words = cleaned.split(/\s+/);
-    let filteredWords = words.filter(word => !isGibberish(word));
+    let processedWords = words
+        .filter(word => !isGibberish(word))
+        .map(word => {
+            const lowerWord = word.toLowerCase();
+            if (ABBREVIATIONS[word]) return ABBREVIATIONS[word];
+            if (ABBREVIATIONS[lowerWord]) return ABBREVIATIONS[lowerWord];
+            return word;
+        });
     
-    return filteredWords.join(' ').trim();
+    return processedWords.join(' ').trim();
 }
 
 const PROFANITY_LIST = ['annı', 'bacını', 'ailenı', 'aq', 'orusbu', 'orusbu çocuğu', 'cocugu'];
