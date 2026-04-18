@@ -19,8 +19,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 function processEvent(event) {
     if (event.source === 'SNSGiftMessage') {
         const amount = parseInt(event.amount) || 0;
-        const gifter = event.gifter || 'Someone';
-        history.unshift({ text: `${gifter} sent ${amount} Credits`, time: new Date().toLocaleTimeString() });
+        const gifter = event.gifter || 'Birisi';
+        history.unshift({ text: `${gifter} ${amount} Kredi Gönderdi`, time: new Date().toLocaleTimeString('tr-TR') });
         if (history.length > MAX_HISTORY) history.pop();
         playTieredSound(amount);
         broadcastState();
@@ -43,7 +43,7 @@ function processEvent(event) {
         if (delta > 0) {
             latestState.amountReached = currentAmount;
             latestState.delta = delta;
-            history.unshift({ text: `Goal Updated: +${delta} (Total: ${currentAmount})`, time: new Date().toLocaleTimeString() });
+            history.unshift({ text: `Hedef Güncellendi: +${delta} (Toplam: ${currentAmount})`, time: new Date().toLocaleTimeString('tr-TR') });
             if (history.length > MAX_HISTORY) history.pop();
             playTieredSound(delta);
             broadcastState();
